@@ -1,0 +1,125 @@
+/**
+ * Proxy configuration for LinkedIn scraper
+ * This module manages proxy rotation for request distribution
+ */
+
+// List of free proxies to use (update these with working proxies)
+export const PROXY_LIST = [
+  'http://116.203.27.109:80',
+  'http://153.19.91.77:80',
+  'http://191.101.1.116:80',
+  'http://156.67.217.159:80',
+  'http://51.222.155.142:80',
+  'http://209.126.6.159:80',
+  'http://31.28.4.192:80',
+  'http://146.59.14.159:80',
+  'http://115.239.234.43:7302',
+  'http://139.59.1.14:8080',
+  'http://16.163.88.228:80',
+  'http://198.199.86.11:3128',
+  'http://57.129.81.201:3128',
+  'http://8.209.255.13:3128',
+  'http://37.32.12.199:80',
+  'http://89.58.57.45:80',
+  'http://85.215.64.49:80',
+  'http://34.87.109.175:443',
+  'http://140.238.30.184:8080',
+  'http://138.199.233.152:80',
+  'http://49.12.216.1:80',
+  'http://38.250.126.201:999',
+  'http://65.21.52.41:8888',
+  'http://45.12.150.82:8080',
+  'http://66.201.7.151:3128',
+  'http://203.19.38.114:1080',
+  'http://142.93.202.130:3128',
+  'http://37.156.46.209:8080',
+  'http://143.42.66.91:80',
+  'http://57.129.81.201:999',
+  'http://158.255.77.168:80',
+  'http://129.226.155.235:8080',
+  'http://95.216.148.196:80',
+  'http://190.2.143.81:8080',
+  'http://133.18.234.13:80',
+  'http://80.249.112.166:80',
+  'http://47.83.192.255:8888',
+  'http://162.223.90.150:80',
+  'http://88.135.72.7:80',
+  'http://178.63.237.156:80',
+  'http://185.105.102.189:80',
+  'http://190.2.143.81:80',
+  'http://219.65.73.81:80',
+  'http://139.59.1.14:80',
+  'http://123.30.154.171:7777',
+  'http://91.103.120.55:80',
+  'http://172.188.122.92:80',
+  'http://97.74.87.226:80',
+  'http://57.129.81.201:8080',
+  'http://198.199.86.11:80',
+  'http://57.129.81.201:8081',
+  'http://87.248.129.32:80'
+];
+
+// Keep track of which proxy to use
+let currentProxyIndex = 0;
+
+/**
+ * Get the next proxy in the rotation
+ */
+export function getNextProxy() {
+  if (PROXY_LIST.length === 0) {
+    return null; // No proxies available
+  }
+  
+  const proxy = PROXY_LIST[currentProxyIndex];
+  
+  // Rotate to next proxy for next request
+  currentProxyIndex = (currentProxyIndex + 1) % PROXY_LIST.length;
+  
+  return proxy;
+}
+
+/**
+ * Format a proxy for use with axios
+ */
+export function formatProxyForAxios(proxyUrl) {
+  if (!proxyUrl) return null;
+  
+  try {
+    const url = new URL(proxyUrl);
+    return {
+      protocol: url.protocol.replace(':', ''),
+      host: url.hostname,
+      port: url.port,
+      // Add auth if present in URL
+      ...(url.username && url.password ? {
+        auth: {
+          username: url.username,
+          password: url.password
+        }
+      } : {})
+    };
+  } catch (error) {
+    console.error('Invalid proxy URL format:', error);
+    return null;
+  }
+}
+
+/**
+ * Test if a proxy is working
+ */
+export async function testProxy(proxy) {
+  if (!proxy) return false;
+  
+  try {
+    const axios = (await import('axios')).default;
+    const response = await axios.get('https://api.ipify.org?format=json', {
+      proxy: formatProxyForAxios(proxy),
+      timeout: 5000 // 5 second timeout
+    });
+    console.log(`Proxy test successful: ${proxy}, IP: ${response.data.ip}`);
+    return true;
+  } catch (error) {
+    console.error(`Proxy test failed: ${proxy}`);
+    return false;
+  }
+}
