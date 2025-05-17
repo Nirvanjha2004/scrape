@@ -1,9 +1,11 @@
 import axios from "axios";
 import express from "express";
+import cors from "cors";
 import { getNextProxy, formatProxyForAxios, testProxy } from './proxyConfig.js';
 const app = express();
 const port = 3000;
 import { getCookies } from "./getcookies.js";
+app.use(cors());
 
 // Add middleware to parse JSON request bodies
 app.use(express.json());
@@ -507,7 +509,7 @@ app.post("/", async (req, res) => {
       const options = {
         cookies: cookieString,
         csrfToken: csrfToken, // Use the extracted token
-        limit: 10, // Start with a smaller limit for testing
+        limit: 20, // Start with a smaller limit for testing
       };
 
       // Add a small random delay to mimic human behavior
